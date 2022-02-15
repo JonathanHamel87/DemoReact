@@ -4,17 +4,21 @@ import fr.jha.demoreact.backend.exceptions.CarNotFoundException;
 import fr.jha.demoreact.backend.models.Car;
 import fr.jha.demoreact.backend.repositories.CarDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("cars")
+@RequestMapping("api/cars")
 public class CarController {
     @Autowired
     CarDao carDao;
 
-    @GetMapping(value = "")
+    @GetMapping
     public List<Car> getAll(){
         List<Car> cars = carDao.findAll();
         return cars;
@@ -26,27 +30,26 @@ public class CarController {
                 .orElseThrow(()-> new CarNotFoundException(id));
     }
 
-    @PostMapping(value = "")
-    public Car newCar(@RequestBody Car newCar){
-        return carDao.save(newCar);
+    @PostMapping
+    public ResponseEntity newCar(@RequestBody Car car) throws URISyntaxException {
+        Car savedCar = carDao.save(car);
+        System.out.println(savedCar.getId());
+        return ResponseEntity.created(new URI("/cars/" + savedCar.getId())).body(savedCar);
     }
 
     @PutMapping(value = "/{id}")
-    public Car updateCar(@RequestBody Car newCar, @PathVariable Long id){
-        return carDao.findById(id)
-                .map(car -> {
-                    car.setColor(newCar.getColor());
-                    car.setMarque(newCar.getMarque());
-                    return carDao.save(car);
-                })
-                .orElseGet(() -> {
-                    newCar.setId(id);
-                    return carDao.save(newCar);
-                });
+    public ResponseEntity updateCar(@RequestBody Car car, @PathVariable Long id){
+       Car currentCar = carDao.findById(id).orElseThrow(() -> new CarNotFoundException(id));
+       currentCar.setColor(car.getColor());
+       currentCar.setBrand(car.getBrand());
+       currentCar = carDao.save(car);
+
+       return ResponseEntity.ok(currentCar);
     }
 
     @DeleteMapping(value = "/{id}")
-    public void deleteCar(@PathVariable Long id){
+    public ResponseEntity deleteCar(@PathVariable Long id){
         carDao.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

@@ -13,10 +13,10 @@ import javax.persistence.*;
 @Entity
 public class Car {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
     private String color;
-    private String marque;
+    private String brand;
 }
